@@ -30,6 +30,8 @@ func TestAllTrueMasks(t *testing.T) {
 		ParentId:       true,
 		Selectors:      true,
 		Ttl:            true,
+		X509SvidTtl:    true,
+		JwtSvidTtl:     true,
 		FederatesWith:  true,
 		Admin:          true,
 		Downstream:     true,

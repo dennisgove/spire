@@ -29,6 +29,18 @@ func printEntry(e *types.Entry, printf func(string, ...interface{}) error) {
 		_ = printf("TTL              : %d\n", e.Ttl)
 	}
 
+	if e.X509SvidTtl == 0 {
+		_ = printf("X509SvidTTL      : default\n")
+	} else {
+		_ = printf("X509SvidTTL      : %d\n", e.X509SvidTtl)
+	}
+
+	if e.JwtSvidTtl == 0 {
+		_ = printf("JwtSvidTTL       : default\n")
+	} else {
+		_ = printf("JwtSvidTTL       : %d\n", e.JwtSvidTtl)
+	}
+
 	if e.ExpiresAt != 0 {
 		_ = printf("Expiration time  : %s\n", time.Unix(e.ExpiresAt, 0).UTC())
 	}

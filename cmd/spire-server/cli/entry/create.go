@@ -39,8 +39,14 @@ type createCommand struct {
 	// Workload spiffeID
 	spiffeID string
 
-	// TTL for certificates issued to this workload
+	// TTL for x509 and JWT SVIDs issued to this workload, unless type specific TTLs are set
 	ttl int
+
+	// TTL for x509 SVIDs issued to this workload
+	x509SvidTtl int
+
+	// TTL for JWT SVIDs issued to this workload
+	jwtSvidTtl int
 
 	// List of SPIFFE IDs of trust domains the registration entry is federated with
 	federatesWith StringsFlag
@@ -76,6 +82,8 @@ func (c *createCommand) AppendFlags(f *flag.FlagSet) {
 	f.StringVar(&c.parentID, "parentID", "", "The SPIFFE ID of this record's parent")
 	f.StringVar(&c.spiffeID, "spiffeID", "", "The SPIFFE ID that this record represents")
 	f.IntVar(&c.ttl, "ttl", 0, "The lifetime, in seconds, for SVIDs issued based on this registration entry")
+	f.IntVar(&c.x509SvidTtl, "x509SvidTtl", 0, "The lifetime, in seconds, for x509-SVIDs issued based on this registration entry. Overrides ttl field")
+	f.IntVar(&c.jwtSvidTtl, "jwtSvidTtl", 0, "The lifetime, in seconds, for JWT-SVIDs issued based on this registration entry. Overrides ttl field")
 	f.StringVar(&c.path, "data", "", "Path to a file containing registration JSON (optional). If set to '-', read the JSON from stdin.")
 	f.Var(&c.selectors, "selector", "A colon-delimited type:value selector. Can be used more than once")
 	f.Var(&c.federatesWith, "federatesWith", "SPIFFE ID of a trust domain to federate with. Can be used more than once")
@@ -156,6 +164,14 @@ func (c *createCommand) validate() (err error) {
 		return errors.New("a positive TTL is required")
 	}
 
+	if c.x509SvidTtl < 0 {
+		return errors.New("a positive x509-SVID TTL is required")
+	}
+
+	if c.jwtSvidTtl < 0 {
+		return errors.New("a positive JWT-SVID TTL is required")
+	}
+
 	return nil
 }
 
@@ -172,13 +188,15 @@ func (c *createCommand) parseConfig() ([]*types.Entry, error) {
 	}
 
 	e := &types.Entry{
-		ParentId:   parentID,
-		SpiffeId:   spiffeID,
-		Ttl:        int32(c.ttl),
-		Downstream: c.downstream,
-		ExpiresAt:  c.entryExpiry,
-		DnsNames:   c.dnsNames,
-		StoreSvid:  c.storeSVID,
+		ParentId:    parentID,
+		SpiffeId:    spiffeID,
+		Ttl:         int32(c.ttl),
+		Downstream:  c.downstream,
+		ExpiresAt:   c.entryExpiry,
+		DnsNames:    c.dnsNames,
+		StoreSvid:   c.storeSVID,
+		X509SvidTtl: int32(c.x509SvidTtl),
+		JwtSvidTtl:  int32(c.jwtSvidTtl),
 	}
 
 	selectors := []*types.Selector{}

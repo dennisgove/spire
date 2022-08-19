@@ -250,11 +250,17 @@ func (s *Service) newX509SVID(ctx context.Context, param *svidv1.NewX509SVIDPara
 	}
 	log = log.WithField(telemetry.SPIFFEID, spiffeID.String())
 
+	// prefer X509SvidTtl if set, otherwise use older Ttl field
+	ttl := entry.X509SvidTtl
+	if ttl <= 0 {
+		ttl = entry.Ttl
+	}
+
 	x509Svid, err := s.ca.SignX509SVID(ctx, ca.X509SVIDParams{
 		SpiffeID:  spiffeID,
 		PublicKey: csr.PublicKey,
 		DNSList:   entry.DnsNames,
-		TTL:       time.Duration(entry.Ttl) * time.Second,
+		TTL:       time.Duration(ttl) * time.Second,
 	})
 	if err != nil {
 		return &svidv1.BatchNewX509SVIDResponse_Result{
@@ -338,12 +344,18 @@ func (s *Service) NewJWTSVID(ctx context.Context, req *svidv1.NewJWTSVIDRequest)
 		return nil, api.MakeErr(log, codes.NotFound, "entry not found or not authorized", nil)
 	}
 
-	jwtsvid, err := s.mintJWTSVID(ctx, entry.SpiffeId, req.Audience, entry.Ttl)
+	// prefer JwtSvidTtl if set, otherwise use older Ttl field
+	ttl := entry.JwtSvidTtl
+	if ttl <= 0 {
+		ttl = entry.Ttl
+	}
+
+	jwtsvid, err := s.mintJWTSVID(ctx, entry.SpiffeId, req.Audience, ttl)
 	if err != nil {
 		return nil, err
 	}
 	rpccontext.AuditRPCWithFields(ctx, logrus.Fields{
-		telemetry.TTL: entry.Ttl,
+		telemetry.TTL: ttl,
 	})
 
 	return &svidv1.NewJWTSVIDResponse{
@@ -374,10 +386,16 @@ func (s *Service) NewDownstreamX509CA(ctx context.Context, req *svidv1.NewDownst
 		return nil, err
 	}
 
+	// prefer X509SvidTtl if set, otherwise use older Ttl field
+	ttl := entry.X509SvidTtl
+	if ttl <= 0 {
+		ttl = entry.Ttl
+	}
+
 	x509CASvid, err := s.ca.SignX509CASVID(ctx, ca.X509CASVIDParams{
 		SpiffeID:  s.td.ID(),
 		PublicKey: csr.PublicKey,
-		TTL:       time.Duration(entry.Ttl) * time.Second,
+		TTL:       time.Duration(ttl) * time.Second,
 	})
 	if err != nil {
 		return nil, api.MakeErr(log, codes.Internal, "failed to sign downstream X.509 CA", err)

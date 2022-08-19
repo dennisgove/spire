@@ -381,6 +381,14 @@ func applyMask(e *types.Entry, mask *types.EntryMask) {
 	if !mask.StoreSvid {
 		e.StoreSvid = false
 	}
+
+	if !mask.X509SvidTtl {
+		e.X509SvidTtl = 0
+	}
+
+	if !mask.JwtSvidTtl {
+		e.JwtSvidTtl = 0
+	}
 }
 
 func (s *Service) updateEntry(ctx context.Context, e *types.Entry, inputMask *types.EntryMask, outputMask *types.EntryMask) *entryv1.BatchUpdateEntryResponse_Result {
@@ -407,6 +415,8 @@ func (s *Service) updateEntry(ctx context.Context, e *types.Entry, inputMask *ty
 			DnsNames:      inputMask.DnsNames,
 			Selectors:     inputMask.Selectors,
 			StoreSvid:     inputMask.StoreSvid,
+			X509SvidTtl:   inputMask.X509SvidTtl,
+			JwtSvidTtl:    inputMask.JwtSvidTtl,
 		}
 	}
 	dsEntry, err := s.ds.UpdateRegistrationEntry(ctx, convEntry, mask)
@@ -464,6 +474,14 @@ func fieldsFromEntryProto(ctx context.Context, proto *types.Entry, inputMask *ty
 
 	if inputMask == nil || inputMask.Ttl {
 		fields[telemetry.TTL] = proto.Ttl
+	}
+
+	if inputMask == nil || inputMask.X509SvidTtl {
+		fields[telemetry.X509TTL] = proto.X509SvidTtl
+	}
+
+	if inputMask == nil || inputMask.JwtSvidTtl {
+		fields[telemetry.JWTTTL] = proto.JwtSvidTtl
 	}
 
 	if inputMask == nil || inputMask.FederatesWith {

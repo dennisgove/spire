@@ -2201,12 +2201,16 @@ func (s *PluginSuite) TestUpdateRegistrationEntry() {
 			{Type: "Type2", Value: "Value2"},
 			{Type: "Type3", Value: "Value3"},
 		},
-		SpiffeId: "spiffe://example.org/foo",
-		ParentId: "spiffe://example.org/bar",
-		Ttl:      1,
+		SpiffeId:    "spiffe://example.org/foo",
+		ParentId:    "spiffe://example.org/bar",
+		Ttl:         1,
+		X509SvidTtl: 10,
+		JwtSvidTtl:  20,
 	})
 
 	entry.Ttl = 2
+	entry.X509SvidTtl = 11
+	entry.JwtSvidTtl = 21
 	entry.Admin = true
 	entry.Downstream = true
 
@@ -2214,6 +2218,8 @@ func (s *PluginSuite) TestUpdateRegistrationEntry() {
 	s.Require().NoError(err)
 	// Verify output has expected values
 	s.Require().Equal(int32(2), entry.Ttl)
+	s.Require().Equal(int32(11), entry.X509SvidTtl)
+	s.Require().Equal(int32(21), entry.JwtSvidTtl)
 	s.Require().True(entry.Admin)
 	s.Require().True(entry.Downstream)
 
@@ -2263,9 +2269,9 @@ func (s *PluginSuite) TestUpdateRegistrationEntryWithStoreSvid() {
 }
 
 func (s *PluginSuite) TestUpdateRegistrationEntryWithMask() {
-	// There are 9 fields in a registration entry. Of these, 3 have some validation in the SQL
-	// layer. In this test, we update each of the 9 fields and make sure update works, and also check
-	// with the mask value false to make sure nothing changes. For the 3 fields that have validation
+	// There are 11 fields in a registration entry. Of these, 5 have some validation in the SQL
+	// layer. In this test, we update each of the 11 fields and make sure update works, and also check
+	// with the mask value false to make sure nothing changes. For the 5 fields that have validation
 	// we try with good data, bad data, and with or without a mask (so 4 cases each.)
 
 	// Note that most of the input validation is done in the API layer and has more extensive tests there.
@@ -2273,6 +2279,8 @@ func (s *PluginSuite) TestUpdateRegistrationEntryWithMask() {
 		ParentId:      "spiffe://example.org/oldParentId",
 		SpiffeId:      "spiffe://example.org/oldSpiffeId",
 		Ttl:           1000,
+		X509SvidTtl:   2000,
+		JwtSvidTtl:    3000,
 		Selectors:     []*common.Selector{{Type: "Type1", Value: "Value1"}},
 		FederatesWith: []string{"spiffe://dom1.org"},
 		Admin:         false,
@@ -2284,7 +2292,9 @@ func (s *PluginSuite) TestUpdateRegistrationEntryWithMask() {
 	newEntry := &common.RegistrationEntry{
 		ParentId:      "spiffe://example.org/oldParentId",
 		SpiffeId:      "spiffe://example.org/newSpiffeId",
-		Ttl:           1000,
+		Ttl:           4000,
+		X509SvidTtl:   5000,
+		JwtSvidTtl:    6000,
 		Selectors:     []*common.Selector{{Type: "Type2", Value: "Value2"}},
 		FederatesWith: []string{"spiffe://dom2.org"},
 		Admin:         false,
@@ -2297,6 +2307,8 @@ func (s *PluginSuite) TestUpdateRegistrationEntryWithMask() {
 		ParentId:      "not a good parent id",
 		SpiffeId:      "",
 		Ttl:           -1000,
+		X509SvidTtl:   -2000,
+		JwtSvidTtl:    -3000,
 		Selectors:     []*common.Selector{},
 		FederatesWith: []string{"invalid federated bundle"},
 		Admin:         false,
@@ -2357,6 +2369,40 @@ func (s *PluginSuite) TestUpdateRegistrationEntryWithMask() {
 		{name: "Update TTL, Bad Data, Mask False",
 			mask:   &common.RegistrationEntryMask{Ttl: false},
 			update: func(e *common.RegistrationEntry) { e.Ttl = badEntry.Ttl },
+			result: func(e *common.RegistrationEntry) {}},
+		// X509 SVID TTL FIELD -- This field is validated so we check with good and bad data
+		{name: "Update X509 SVID TTL, Good Data, Mask True",
+			mask:   &common.RegistrationEntryMask{X509SvidTtl: true},
+			update: func(e *common.RegistrationEntry) { e.X509SvidTtl = newEntry.X509SvidTtl },
+			result: func(e *common.RegistrationEntry) { e.X509SvidTtl = newEntry.X509SvidTtl }},
+		{name: "Update X509 SVID TTL, Good Data, Mask False",
+			mask:   &common.RegistrationEntryMask{X509SvidTtl: false},
+			update: func(e *common.RegistrationEntry) { e.X509SvidTtl = badEntry.X509SvidTtl },
+			result: func(e *common.RegistrationEntry) {}},
+		{name: "Update X509 SVID TTL, Bad Data, Mask True",
+			mask:   &common.RegistrationEntryMask{X509SvidTtl: true},
+			update: func(e *common.RegistrationEntry) { e.X509SvidTtl = badEntry.X509SvidTtl },
+			err:    errors.New("invalid registration entry: X509SvidTtl is not set")},
+		{name: "Update X509 SVID TTL, Bad Data, Mask False",
+			mask:   &common.RegistrationEntryMask{X509SvidTtl: false},
+			update: func(e *common.RegistrationEntry) { e.X509SvidTtl = badEntry.X509SvidTtl },
+			result: func(e *common.RegistrationEntry) {}},
+		// JWT SVID TTL FIELD -- This field is validated so we check with good and bad data
+		{name: "Update JWT SVID TTL, Good Data, Mask True",
+			mask:   &common.RegistrationEntryMask{JwtSvidTtl: true},
+			update: func(e *common.RegistrationEntry) { e.JwtSvidTtl = newEntry.JwtSvidTtl },
+			result: func(e *common.RegistrationEntry) { e.JwtSvidTtl = newEntry.JwtSvidTtl }},
+		{name: "Update JWT SVID TTL, Good Data, Mask False",
+			mask:   &common.RegistrationEntryMask{JwtSvidTtl: false},
+			update: func(e *common.RegistrationEntry) { e.JwtSvidTtl = badEntry.JwtSvidTtl },
+			result: func(e *common.RegistrationEntry) {}},
+		{name: "Update JWT SVID TTL, Bad Data, Mask True",
+			mask:   &common.RegistrationEntryMask{JwtSvidTtl: true},
+			update: func(e *common.RegistrationEntry) { e.JwtSvidTtl = badEntry.JwtSvidTtl },
+			err:    errors.New("invalid registration entry: JwtSvidTtl is not set")},
+		{name: "Update JWT SVID TTL, Bad Data, Mask False",
+			mask:   &common.RegistrationEntryMask{JwtSvidTtl: false},
+			update: func(e *common.RegistrationEntry) { e.JwtSvidTtl = badEntry.JwtSvidTtl },
 			result: func(e *common.RegistrationEntry) {}},
 		// SELECTORS FIELD -- This field is validated so we check with good and bad data
 		{name: "Update Selectors, Good Data, Mask True",

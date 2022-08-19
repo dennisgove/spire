@@ -34,6 +34,8 @@ func TestUpdate(t *testing.T) {
 			{Type: "alpha", Value: "alpha:2000"},
 		},
 		Ttl:           60,
+		X509SvidTtl:   45,
+		JwtSvidTtl:    30,
 		FederatesWith: []string{"spiffe://domaina.test", "spiffe://domainb.test"},
 		Admin:         true,
 		ExpiresAt:     1552410266,
@@ -50,6 +52,8 @@ func TestUpdate(t *testing.T) {
 			{Type: "type", Value: "key2:value"},
 		},
 		Ttl:           60,
+		X509SvidTtl:   45,
+		JwtSvidTtl:    30,
 		FederatesWith: []string{"spiffe://domaina.test", "spiffe://domainb.test"},
 		ExpiresAt:     1552410266,
 		DnsNames:      []string{"unu1000", "ung1000"},
@@ -68,20 +72,24 @@ func TestUpdate(t *testing.T) {
 	}
 
 	entry2 := &types.Entry{
-		Id:        "entry-id-1",
-		SpiffeId:  &types.SPIFFEID{TrustDomain: "example.org", Path: "/Blog"},
-		ParentId:  &types.SPIFFEID{TrustDomain: "example.org", Path: "/spire/agent/join_token/TokenBlog"},
-		Selectors: []*types.Selector{{Type: "unix", Value: "uid:1111"}},
-		Ttl:       200,
-		Admin:     true,
+		Id:          "entry-id-1",
+		SpiffeId:    &types.SPIFFEID{TrustDomain: "example.org", Path: "/Blog"},
+		ParentId:    &types.SPIFFEID{TrustDomain: "example.org", Path: "/spire/agent/join_token/TokenBlog"},
+		Selectors:   []*types.Selector{{Type: "unix", Value: "uid:1111"}},
+		Ttl:         200,
+		X509SvidTtl: 450,
+		JwtSvidTtl:  300,
+		Admin:       true,
 	}
 
 	entry3 := &types.Entry{
-		Id:        "entry-id-2",
-		SpiffeId:  &types.SPIFFEID{TrustDomain: "example.org", Path: "/Database"},
-		ParentId:  &types.SPIFFEID{TrustDomain: "example.org", Path: "/spire/agent/join_token/TokenDatabase"},
-		Selectors: []*types.Selector{{Type: "unix", Value: "uid:1111"}},
-		Ttl:       200,
+		Id:          "entry-id-2",
+		SpiffeId:    &types.SPIFFEID{TrustDomain: "example.org", Path: "/Database"},
+		ParentId:    &types.SPIFFEID{TrustDomain: "example.org", Path: "/spire/agent/join_token/TokenDatabase"},
+		Selectors:   []*types.Selector{{Type: "unix", Value: "uid:1111"}},
+		Ttl:         200,
+		X509SvidTtl: 450,
+		JwtSvidTtl:  300,
 	}
 
 	entry4 := &types.Entry{
@@ -92,8 +100,10 @@ func TestUpdate(t *testing.T) {
 			{Type: "type", Value: "key1:value"},
 			{Type: "type", Value: "key2:value"},
 		},
-		StoreSvid: true,
-		Ttl:       200,
+		StoreSvid:   true,
+		Ttl:         200,
+		X509SvidTtl: 450,
+		JwtSvidTtl:  300,
 	}
 
 	fakeRespOKFromFile := &entryv1.BatchUpdateEntryResponse{
@@ -187,6 +197,8 @@ func TestUpdate(t *testing.T) {
 				"-selector", "zebra:zebra:2000",
 				"-selector", "alpha:alpha:2000",
 				"-ttl", "60",
+				"-x509SvidTtl", "45",
+				"-jwtSvidTtl", "30",
 				"-federatesWith", "spiffe://domaina.test",
 				"-federatesWith", "spiffe://domainb.test",
 				"-admin",
@@ -205,6 +217,8 @@ Parent ID        : spiffe://example.org/parent
 Revision         : 0
 Downstream       : true
 TTL              : 60
+X509SvidTTL      : 45
+JwtSvidTTL       : 30
 Expiration time  : %s
 Selector         : zebra:zebra:2000
 Selector         : alpha:alpha:2000
@@ -225,6 +239,8 @@ Admin            : true
 				"-selector", "type:key1:value",
 				"-selector", "type:key2:value",
 				"-ttl", "60",
+				"-x509SvidTtl", "45",
+				"-jwtSvidTtl", "30",
 				"-federatesWith", "spiffe://domaina.test",
 				"-federatesWith", "spiffe://domainb.test",
 				"-entryExpiry", "1552410266",
@@ -251,6 +267,8 @@ SPIFFE ID        : spiffe://example.org/workload
 Parent ID        : spiffe://example.org/parent
 Revision         : 0
 TTL              : 60
+X509SvidTTL      : 45
+JwtSvidTTL       : 30
 Expiration time  : %s
 Selector         : type:key1:value
 Selector         : type:key2:value
@@ -276,6 +294,8 @@ SPIFFE ID        : spiffe://example.org/Blog
 Parent ID        : spiffe://example.org/spire/agent/join_token/TokenBlog
 Revision         : 0
 TTL              : 200
+X509SvidTTL      : 450
+JwtSvidTTL       : 300
 Selector         : unix:uid:1111
 Admin            : true
 
@@ -284,6 +304,8 @@ SPIFFE ID        : spiffe://example.org/Database
 Parent ID        : spiffe://example.org/spire/agent/join_token/TokenDatabase
 Revision         : 0
 TTL              : 200
+X509SvidTTL      : 450
+JwtSvidTTL       : 300
 Selector         : unix:uid:1111
 
 Entry ID         : entry-id-3
@@ -291,6 +313,8 @@ SPIFFE ID        : spiffe://example.org/Storesvid
 Parent ID        : spiffe://example.org/spire/agent/join_token/TokenDatabase
 Revision         : 0
 TTL              : 200
+X509SvidTTL      : 450
+JwtSvidTTL       : 300
 Selector         : type:key1:value
 Selector         : type:key2:value
 StoreSvid        : true
@@ -315,6 +339,8 @@ SPIFFE ID        : spiffe://example.org/workload
 Parent ID        : spiffe://example.org/parent
 Revision         : 0
 TTL              : default
+X509SvidTTL      : default
+JwtSvidTTL       : default
 Selector         : unix:uid:1
 
 Error: failed to update one or more entries

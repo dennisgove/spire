@@ -416,6 +416,8 @@ SPIFFE ID        : spiffe://example.org/son
 Parent ID        : spiffe://example.org/father
 Revision         : 0
 TTL              : default
+X509SvidTTL      : default
+JwtSvidTTL       : default
 Selector         : foo:bar
 
 `
@@ -425,6 +427,8 @@ SPIFFE ID        : spiffe://example.org/daughter
 Parent ID        : spiffe://example.org/father
 Revision         : 0
 TTL              : default
+X509SvidTTL      : default
+JwtSvidTTL       : default
 Selector         : bar:baz
 Selector         : foo:bar
 
@@ -435,6 +439,8 @@ SPIFFE ID        : spiffe://example.org/daughter
 Parent ID        : spiffe://example.org/mother
 Revision         : 0
 TTL              : default
+X509SvidTTL      : default
+JwtSvidTTL       : default
 Selector         : bar:baz
 Selector         : baz:bat
 FederatesWith    : spiffe://domain.test
@@ -446,6 +452,8 @@ SPIFFE ID        : spiffe://example.org/son
 Parent ID        : spiffe://example.org/mother
 Revision         : 0
 TTL              : default
+X509SvidTTL      : default
+JwtSvidTTL       : default
 Expiration time  : %s
 Selector         : baz:bat
 

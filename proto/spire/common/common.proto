@@ -88,6 +88,10 @@ message RegistrationEntry {
     int64 revision_number = 11;
     /** Determines if the issued SVID must be stored through an SVIDStore plugin */
     bool store_svid = 12;
+    /** Time to live for X509-SVIDs generated from this entry, if set will override ttl field for all X509-SVIDs. */
+		int32 x509_svid_ttl = 13;
+		/** Time to live for JWT-SVIDs generated from this entry, if set will override ttl field for alll JWT-SVIDs. */
+		int32 jwt_svid_ttl = 14;
 }
 
 /** The RegistrationEntryMask is used to update only selected fields of the RegistrationEntry */
@@ -103,6 +107,8 @@ message RegistrationEntryMask {
     bool entryExpiry = 9;
     bool dns_names = 10;
     bool store_svid = 11;
+    bool x509_svid_ttl = 12;
+    bool jwt_svid_ttl = 13;
 }
 
 

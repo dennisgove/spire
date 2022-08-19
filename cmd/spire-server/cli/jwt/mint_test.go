@@ -188,6 +188,7 @@ func TestMintRun(t *testing.T) {
 				},
 			},
 		},
+
 		{
 			name:     "write on invalid path",
 			spiffeID: "spiffe://domain.test/workload",
